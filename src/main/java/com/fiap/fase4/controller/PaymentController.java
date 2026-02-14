@@ -1,8 +1,9 @@
 package com.fiap.fase4.controller;
 
-import com.fiap.fase4.dto.infinitepay.CreateLinkRequest;
-import com.fiap.fase4.dto.infinitepay.CreateLinkResponse;
+import com.fiap.fase4.presenter.dto.CreatePreferenceRequestDTO;
+import com.fiap.fase4.presenter.dto.CreatePreferenceResponseDTO;
 import com.fiap.fase4.service.PaymentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,15 +12,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/api/v1/checkout")
+@RequiredArgsConstructor
 public class PaymentController {
 
-    @Autowired
-    private PaymentService paymentService;
+    private final PaymentService paymentService;
 
-    @PostMapping("/checkout")
-    public ResponseEntity<CreateLinkResponse> createCheckoutLink(@RequestBody CreateLinkRequest request) {
-        CreateLinkResponse response = paymentService.createPaymentLink(request);
+    @PostMapping("/mercadopago")
+    public ResponseEntity<CreatePreferenceResponseDTO> createMercadoPagoCheckoutLink(@RequestBody CreatePreferenceRequestDTO request) {
+        CreatePreferenceResponseDTO response = paymentService.createMercadoPagoPaymentLink(request);
         return ResponseEntity.ok(response);
     }
 }
