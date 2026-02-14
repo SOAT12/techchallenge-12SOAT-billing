@@ -21,10 +21,12 @@ public class PaymentEntity {
     private String id;
     private String preferenceId;
     private String serviceOrderId;
+    private String checkoutUrl;
     private BigDecimal amount;
     private String customerId;
     private String customerEmail;
     private String status;
+    private String statusDetail;
     private String paymentMethod;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

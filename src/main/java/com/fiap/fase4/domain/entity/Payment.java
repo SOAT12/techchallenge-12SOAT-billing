@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Payment {
 
-    private String id; // Added ID field
+    private String id;
     private String preferenceId;
+    private String checkoutUrl;
     private String serviceOrderId;
     private BigDecimal amount;
     private PaymentStatus status;

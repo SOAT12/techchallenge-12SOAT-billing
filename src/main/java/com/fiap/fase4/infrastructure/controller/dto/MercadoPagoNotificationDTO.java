@@ -1,14 +1,18 @@
-package com.fiap.fase4.application.dto;
+package com.fiap.fase4.infrastructure.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Represents the incoming webhook payload from Mercado Pago.
+ * Kept in infrastructure as it reflects the external HTTP contract.
+ */
 @Data
 @NoArgsConstructor
 public class MercadoPagoNotificationDTO {
 
-    private String action; // e.g., "payment.updated", "payment.created"
+    private String action;
 
     @JsonProperty("api_version")
     private String apiVersion;
@@ -18,12 +22,12 @@ public class MercadoPagoNotificationDTO {
     @JsonProperty("date_created")
     private String dateCreated;
 
-    private long id; // Notification ID
+    private long id;
 
     @JsonProperty("live_mode")
     private boolean liveMode;
 
-    private String type; // e.g., "payment"
+    private String type;
 
     @JsonProperty("user_id")
     private long userId;
@@ -31,6 +35,6 @@ public class MercadoPagoNotificationDTO {
     @Data
     @NoArgsConstructor
     public static class NotificationData {
-        private String id; // ID of the resource (e.g., payment ID)
+        private String id;
     }
 }
