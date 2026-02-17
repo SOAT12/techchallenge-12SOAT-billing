@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: billing-api
-        image: billing-api:latest # This will be your registry image url
+        image: 258531703731.dkr.ecr.us-east-1.amazonaws.com/billing-api:latest # This will be your registry image url
         ports:
         - containerPort: 8080
         env:
