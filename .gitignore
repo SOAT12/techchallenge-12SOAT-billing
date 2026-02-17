@@ -31,3 +31,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Terraform ###
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+### Secrets and Environment ###
+.env
+k8s/billing-secret.yaml
+
+### OS Files ###
+Thumbs.db
+desktop.ini

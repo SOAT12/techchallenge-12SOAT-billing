@@ -3,3 +3,14 @@ target/
 .idea/
 *.iml
 .DS_Store
+.vscode/
+
+# Build and Infra
+terraform/
+k8s/
+.env
+Dockerfile
+docker-compose.yml
+README_DEPLOY.md
+deploy.ps1
+destroy.ps1
