@@ -31,6 +31,25 @@ module "eks" {
   # To add the current caller identity as an administrator
   enable_cluster_creator_admin_permissions = true
 
+  # Add GitHub Actions User as Admin
+  access_entries = {
+    # One access entry with a policy associated
+    github_actions = {
+      kubernetes_groups = []
+      principal_arn     = "arn:aws:iam::258531703731:user/terraforms_user"
+
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            namespaces = []
+            type       = "cluster"
+          }
+        }
+      }
+    }
+  }
+
   tags = {
     Environment = "dev"
     Project     = "techchallenge-billing"
