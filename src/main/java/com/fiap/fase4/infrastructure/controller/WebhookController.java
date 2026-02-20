@@ -3,6 +3,7 @@ package com.fiap.fase4.infrastructure.controller;
 import com.fiap.fase4.application.dto.ProcessPaymentNotificationRequestDTO;
 import com.fiap.fase4.infrastructure.controller.dto.MercadoPagoNotificationDTO;
 import com.fiap.fase4.infrastructure.controller.mapper.WebhookPayloadMapper;
+import com.fiap.fase4.infrastructure.messaging.WebhookProcessingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

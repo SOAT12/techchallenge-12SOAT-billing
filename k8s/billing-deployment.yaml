@@ -14,6 +14,7 @@ spec:
       labels:
         app: billing-api
     spec:
+      serviceAccountName: billing-sa
       containers:
       - name: billing-api
         image: 258531703731.dkr.ecr.us-east-1.amazonaws.com/billing-api:latest # This will be your registry image url
@@ -25,6 +26,24 @@ spec:
             secretKeyRef:
               name: billing-secrets
               key: MONGODB_URI
+        - name: PAYMENT_NOTIFICATION_QUEUE_URL
+          valueFrom:
+            secretKeyRef:
+              name: billing-secrets
+              key: PAYMENT_NOTIFICATION_QUEUE_URL
+              optional: true
+        - name: PAYMENT_APPROVED_TOPIC_ARN
+          valueFrom:
+            secretKeyRef:
+              name: billing-secrets
+              key: PAYMENT_APPROVED_TOPIC_ARN
+              optional: true
+        - name: PAYMENT_FAILED_TOPIC_ARN
+          valueFrom:
+            secretKeyRef:
+              name: billing-secrets
+              key: PAYMENT_FAILED_TOPIC_ARN
+              optional: true
         envFrom:
         - secretRef:
             name: billing-secrets

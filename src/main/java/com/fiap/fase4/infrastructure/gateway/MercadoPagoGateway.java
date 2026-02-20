@@ -137,4 +137,31 @@ public class MercadoPagoGateway implements PaymentGateway {
         if (methodId.matches("visa|master|amex|elo|hipercard|diners|discover|aura|jcb")) return PaymentMethod.CREDIT_CARD;
         return PaymentMethod.OTHER;
     }
+
+    @Override
+    public boolean refundPayment(String paymentId) {
+        log.info("Refunding Mercado Pago payment for payment ID: {}", paymentId);
+        try {
+            // Check if the payment ID is valid and numeric before proceeding
+            long mpPaymentId = Long.parseLong(paymentId);
+            com.mercadopago.client.payment.PaymentRefundClient refundClient = new com.mercadopago.client.payment.PaymentRefundClient();
+            com.mercadopago.resources.payment.PaymentRefund refund = refundClient.refund(mpPaymentId);
+            
+            if (refund != null && refund.getId() != null) {
+                log.info("Successfully refunded payment ID: {}. Refund ID: {}", paymentId, refund.getId());
+                return true;
+            }
+            return false;
+        } catch (NumberFormatException e) {
+            log.warn("Cannot refund payment because ID is not numeric (likely a preference ID, not a processed payment): {}", paymentId);
+            return false;
+        } catch (MPApiException e) {
+            log.error("Mercado Pago API error while refunding: Status Code: {}, Response: {}", e.getStatusCode(), e.getApiResponse().getContent(), e);
+            // It might fail if the payment was never completed or is already refunded. We return false instead of throwing to allow SAGA to proceed.
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error refunding payment ID: {}. Error: {}", paymentId, e.getMessage(), e);
+            return false;
+        }
+    }
 }
