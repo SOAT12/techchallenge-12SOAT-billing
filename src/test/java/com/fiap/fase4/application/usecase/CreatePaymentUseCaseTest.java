@@ -40,6 +40,7 @@ class CreatePaymentUseCaseTest {
         request.setTotalAmount(new BigDecimal("100.00"));
 
         CustomerDTO customer = new CustomerDTO();
+        customer.setCustomerId("CUST-123");
         customer.setEmail("test@test.com");
         customer.setCustomerName("Test User");
         request.setCustomer(customer);

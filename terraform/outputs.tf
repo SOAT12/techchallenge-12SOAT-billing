@@ -22,3 +22,19 @@ output "ecr_repository_url" {
   description = "The URL of the ECR repository"
   value       = aws_ecr_repository.billing_api.repository_url
 }
+
+output "payment_notifications_queue_url" {
+  value = aws_sqs_queue.payment_notifications.url
+}
+
+output "payment_approved_topic_arn" {
+  value = aws_sns_topic.payment_approved.arn
+}
+
+output "payment_failed_topic_arn" {
+  value = aws_sns_topic.payment_failed.arn
+}
+
+output "billing_irsa_role_arn" {
+  value = module.billing_irsa_role.iam_role_arn
+}

@@ -1,5 +1,6 @@
 package com.fiap.fase4.infrastructure.controller.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MercadoPagoNotificationDTO {
 
     private String action;
@@ -30,10 +32,11 @@ public class MercadoPagoNotificationDTO {
     private String type;
 
     @JsonProperty("user_id")
-    private long userId;
+    private String userId;
 
     @Data
     @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NotificationData {
         private String id;
     }
