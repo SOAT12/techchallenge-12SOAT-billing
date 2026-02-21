@@ -47,6 +47,7 @@ public class ProcessPaymentNotificationUseCase {
                 
                 if (paymentOptional.isPresent()) {
                     Payment payment = paymentOptional.get();
+                    payment.setPaymentId(input.resourceId());
                     payment.setStatus(paymentDetails.getStatus());
                     payment.setStatusDetail(paymentDetails.getStatusDetail());
                     payment.setPaymentMethod(paymentDetails.getPaymentMethod());
@@ -75,7 +76,7 @@ public class ProcessPaymentNotificationUseCase {
         if (PaymentStatus.APPROVED.equals(payment.getStatus())) {
             PaymentApprovedEvent event = new PaymentApprovedEvent(
                     payment.getServiceOrderId(),
-                    payment.getId(),
+                    payment.getPaymentId(),
                     payment.getPreferenceId(),
                     payment.getAmount(),
                     payment.getPaymentMethod() != null ? payment.getPaymentMethod().name() : "UNKNOWN",
@@ -85,7 +86,7 @@ public class ProcessPaymentNotificationUseCase {
         } else if (PaymentStatus.REJECTED.equals(payment.getStatus()) || PaymentStatus.CANCELLED.equals(payment.getStatus())) {
             PaymentFailedEvent event = new PaymentFailedEvent(
                     payment.getServiceOrderId(),
-                    payment.getId(),
+                    payment.getPaymentId(),
                     "Payment was " + payment.getStatus().name(),
                     payment.getStatusDetail(),
                     LocalDateTime.now()

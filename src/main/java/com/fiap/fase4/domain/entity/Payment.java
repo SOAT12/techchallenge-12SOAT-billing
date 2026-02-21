@@ -14,6 +14,7 @@ public class Payment {
 
     private String id;
     private String preferenceId;
+    private String paymentId;
     private String checkoutUrl;
     private String serviceOrderId;
     private BigDecimal amount;

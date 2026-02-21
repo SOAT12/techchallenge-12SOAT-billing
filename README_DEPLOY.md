@@ -13,42 +13,10 @@ docker-compose up
 ```
 Access the API at `http://localhost:8080`.
 
-### Webhooks (Mercado Pago) when running in containers
+### Webhooks (Mercado Pago)
+Mercado Pago sends payment notifications to a **public HTTPS URL**. When running locally, you must use a tunnel service (like Serveo, Localtunnel, or a configured ngrok tunnel) to expose your local port 8080 to the internet.
 
-Mercado Pago sends payment notifications to a **public URL**. When running locally with Docker, your app is only reachable at `localhost`, so the webhook callback must go through a tunnel.
-
-**Option A – ngrok in the stack (recommended for local + containers)**
-
-1. Create a [free ngrok account](https://ngrok.com/) and copy your [authtoken](https://dashboard.ngrok.com/get-started/your-authtoken).
-2. Create a `.env` file in the project root (same folder as `docker-compose.yml`):
-   ```env
-   NGROK_AUTHTOKEN=your_ngrok_authtoken_here
-   MERCADO_PAGO_ACCESS_TOKEN=your_mercado_pago_token
-   ```
-3. Start the stack (including ngrok):
-   ```bash
-   docker-compose up -d
-   ```
-4. Get the public URL: open **http://localhost:4040** (ngrok web inspector). Copy the HTTPS URL (e.g. `https://abc123.ngrok-free.app`).
-5. Set the webhook URL and restart the billing service so it sends this URL to Mercado Pago when creating preferences:
-   ```bash
-   set MERCADOPAGO_NOTIFICATION_URL=https://YOUR_NGROK_URL/api/v1/webhooks/mercadopago
-   docker-compose up -d --force-recreate billing-service
-   ```
-   On Linux/Mac use `export` instead of `set`, or put `MERCADOPAGO_NOTIFICATION_URL=https://YOUR_NGROK_URL/api/v1/webhooks/mercadopago` in your `.env` and run:
-   ```bash
-   docker-compose up -d --force-recreate billing-service
-   ```
-
-**Option B – ngrok on the host**
-
-If you prefer to run ngrok on your machine (not in Docker):
-
-1. Start your stack: `docker-compose up -d` (you can omit the `ngrok` service or leave it stopped).
-2. Run ngrok pointing at the exposed port: `ngrok http 8080`.
-3. Set `MERCADOPAGO_NOTIFICATION_URL` to `https://YOUR_NGROK_URL/api/v1/webhooks/mercadopago` (in `.env` or env) and restart the billing service as in step 5 above.
-
-Without one of these, Mercado Pago has no public URL to call and the webhook will not work.
+Set the `MERCADOPAGO_NOTIFICATION_URL` environment variable to your public tunnel URL (e.g. `https://your-tunnel.com/api/v1/webhooks/mercadopago`).
 
 ## Kubernetes (AWS EKS)
 

@@ -1,7 +1,0 @@
-# ngrok config for docker-compose: tunnel to billing-service with a RANDOM URL
-# (no domain = no conflict with another ngrok using your reserved domain)
-version: "2"
-tunnels:
-  billing:
-    proto: http
-    addr: billing-service:8080
