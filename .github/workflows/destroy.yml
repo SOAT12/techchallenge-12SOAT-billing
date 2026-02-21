@@ -41,6 +41,9 @@ jobs:
       # Step 2: Infrastructure Teardown
       # Since we added 'force_delete = true' to ECR, Terraform will handle 
       # deleting the repository even if it has images.
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
       - name: Terraform Destroy
         run: |
           cd terraform
