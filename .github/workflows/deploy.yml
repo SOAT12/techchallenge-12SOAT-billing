@@ -25,6 +25,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       # --- Step 1: Infrastructure Automation ---
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
       - name: Terraform Apply
         id: terraform
         run: |
