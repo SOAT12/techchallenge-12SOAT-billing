@@ -20,6 +20,7 @@ public class PaymentEntity {
     @Id
     private String id;
     private String preferenceId;
+    private String paymentId;
     private String serviceOrderId;
     private String checkoutUrl;
     private BigDecimal amount;

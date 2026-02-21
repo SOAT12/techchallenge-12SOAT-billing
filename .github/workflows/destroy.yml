@@ -1,0 +1,54 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch: # Manual trigger required for destructive actions
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: techchallenge-billing
+  ECR_REPOSITORY_NAME: billing-api
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 1: Cleanup Kubernetes-managed cloud resources
+      # We delete the entire k8s directory to ensure Services (LoadBalancers) and 
+      # VolumeClaims are removed. This releases AWS resources that Terraform 
+      # did not create but are attached to the VPC.
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }} || echo "Cluster not found"
+
+      - name: Delete Kubernetes Resources
+        run: |
+          echo "Decommissioning Kubernetes resources..."
+          kubectl delete -f k8s/ --ignore-not-found=true --wait=true || echo "K8s resources already gone"
+          
+          echo "Waiting 60s for Cloud Provider (AWS) to fully release LoadBalancer and Security Groups..."
+          sleep 60
+
+      # Step 2: Infrastructure Teardown
+      # Since we added 'force_delete = true' to ECR, Terraform will handle 
+      # deleting the repository even if it has images.
+      - name: Terraform Destroy
+        run: |
+          cd terraform
+          terraform init
+          terraform destroy -auto-approve
+
+      # Step 3: Final Verification (Clean-up Safety Net)
+      # Ensures the ECR repository is deleted even if Terraform failed to remove it.
+      - name: Force Cleanup ECR
+        run: |
+          aws ecr delete-repository --repository-name ${{ env.ECR_REPOSITORY_NAME }} --region ${{ env.AWS_REGION }} --force || echo "ECR repo already removed"

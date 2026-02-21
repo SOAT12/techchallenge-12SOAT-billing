@@ -18,9 +18,19 @@ spec:
       containers:
       - name: billing-api
         image: 258531703731.dkr.ecr.us-east-1.amazonaws.com/billing-api:latest # This will be your registry image url
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
+        - name: SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY
+          value: "dummy"
+        - name: SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY
+          value: "dummy"
+        - name: APP_SQS_PAYMENT_NOTIFICATION_QUEUE_URL
+          valueFrom:
+            secretKeyRef:
+              name: billing-secrets
+              key: PAYMENT_NOTIFICATION_QUEUE_URL
         - name: MONGODB_URI
           valueFrom:
             secretKeyRef:
