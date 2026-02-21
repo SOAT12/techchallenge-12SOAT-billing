@@ -6,6 +6,12 @@ terraform {
     }
   }
 
+  backend "s3" {
+    bucket = "techchallenge-billing-tfstate-258531703731"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
+  }
+
   required_version = ">= 1.2.0"
 }
 
