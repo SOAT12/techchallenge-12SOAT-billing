@@ -148,4 +148,199 @@ class MercadoPagoGatewayTest {
                     .hasMessageContaining("Payment not found");
         }
     }
+
+    @Test
+    void createPreference_shouldThrowPaymentGatewayExceptionOnMPException() throws MPException, MPApiException {
+        Payment payment = Payment.builder()
+                .serviceOrderId("ORDER-123")
+                .payer(Payer.builder().email("test@test.com").customerName("Test User").build())
+                .build();
+        List<PaymentItem> items = Collections.singletonList(
+                PaymentItem.builder().id("ITEM-1").itemName("Item").quantity(1).price(BigDecimal.TEN).build()
+        );
+        PaymentUrls urls = PaymentUrls.builder().successUrl("success").failureUrl("failure").pendingUrl("pending").build();
+
+        MPException exception = new MPException("SDK error");
+
+        try (MockedConstruction<PreferenceClient> mocked = Mockito.mockConstruction(PreferenceClient.class,
+                (mock, context) -> {
+                    when(mock.create(any(PreferenceRequest.class))).thenThrow(exception);
+                })) {
+
+            assertThatThrownBy(() -> mercadoPagoGateway.createPreference(payment, items, urls))
+                    .isInstanceOf(PaymentGatewayException.class)
+                    .hasMessageContaining("Mercado Pago SDK error");
+        }
+    }
+
+    @Test
+    void createPreference_shouldThrowPaymentGatewayExceptionOnGenericException() throws MPException, MPApiException {
+        Payment payment = Payment.builder()
+                .serviceOrderId("ORDER-123")
+                .payer(Payer.builder().email("test@test.com").customerName("Test User").build())
+                .build();
+        List<PaymentItem> items = Collections.singletonList(
+                PaymentItem.builder().id("ITEM-1").itemName("Item").quantity(1).price(BigDecimal.TEN).build()
+        );
+        PaymentUrls urls = PaymentUrls.builder().successUrl("success").failureUrl("failure").pendingUrl("pending").build();
+
+        RuntimeException exception = new RuntimeException("Unexpected error");
+
+        try (MockedConstruction<PreferenceClient> mocked = Mockito.mockConstruction(PreferenceClient.class,
+                (mock, context) -> {
+                    when(mock.create(any(PreferenceRequest.class))).thenThrow(exception);
+                })) {
+
+            assertThatThrownBy(() -> mercadoPagoGateway.createPreference(payment, items, urls))
+                    .isInstanceOf(PaymentGatewayException.class)
+                    .hasMessageContaining("Unexpected error creating preference");
+        }
+    }
+
+    @Test
+    void getPaymentDetails_shouldReturnUnknownStatusAndCreditCardMethod() throws MPException, MPApiException {
+        com.mercadopago.resources.payment.Payment mpPayment = mock(com.mercadopago.resources.payment.Payment.class);
+        when(mpPayment.getId()).thenReturn(12345L);
+        when(mpPayment.getExternalReference()).thenReturn("ORDER-123");
+        when(mpPayment.getTransactionAmount()).thenReturn(BigDecimal.TEN);
+        when(mpPayment.getStatus()).thenReturn("invalid_status");
+        when(mpPayment.getStatusDetail()).thenReturn("accredited");
+        when(mpPayment.getPaymentMethodId()).thenReturn("visa");
+
+        try (MockedConstruction<PaymentClient> mocked = Mockito.mockConstruction(PaymentClient.class,
+                (mock, context) -> {
+                    when(mock.get(12345L)).thenReturn(mpPayment);
+                })) {
+
+            Payment result = mercadoPagoGateway.getPaymentDetails("12345");
+
+            assertThat(result.getStatus()).isEqualTo(PaymentStatus.UNKNOWN);
+            assertThat(result.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
+        }
+    }
+
+    @Test
+    void getPaymentDetails_shouldReturnOtherMethod() throws MPException, MPApiException {
+        com.mercadopago.resources.payment.Payment mpPayment = mock(com.mercadopago.resources.payment.Payment.class);
+        when(mpPayment.getId()).thenReturn(12345L);
+        when(mpPayment.getExternalReference()).thenReturn("ORDER-123");
+        when(mpPayment.getTransactionAmount()).thenReturn(BigDecimal.TEN);
+        when(mpPayment.getStatus()).thenReturn("approved");
+        when(mpPayment.getStatusDetail()).thenReturn("accredited");
+        when(mpPayment.getPaymentMethodId()).thenReturn("bol");
+
+        try (MockedConstruction<PaymentClient> mocked = Mockito.mockConstruction(PaymentClient.class,
+                (mock, context) -> {
+                    when(mock.get(12345L)).thenReturn(mpPayment);
+                })) {
+
+            Payment result = mercadoPagoGateway.getPaymentDetails("12345");
+
+            assertThat(result.getPaymentMethod()).isEqualTo(PaymentMethod.OTHER);
+        }
+    }
+
+    @Test
+    void refundPayment_shouldReturnTrueWhenSuccessful() throws MPException, MPApiException {
+        com.mercadopago.resources.payment.PaymentRefund refund = mock(com.mercadopago.resources.payment.PaymentRefund.class);
+        when(refund.getId()).thenReturn(111L);
+
+        try (MockedConstruction<com.mercadopago.client.payment.PaymentRefundClient> mocked = Mockito.mockConstruction(com.mercadopago.client.payment.PaymentRefundClient.class,
+                (mock, context) -> {
+                    when(mock.refund(12345L)).thenReturn(refund);
+                })) {
+
+            boolean result = mercadoPagoGateway.refundPayment("12345");
+            assertThat(result).isTrue();
+        }
+    }
+
+    @Test
+    void refundPayment_shouldReturnFalseOnNumberFormatException() {
+        boolean result = mercadoPagoGateway.refundPayment("not-a-number");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void refundPayment_shouldReturnFalseOnMPApiException() throws MPException, MPApiException {
+        MPApiException exception = mock(MPApiException.class);
+        MPResponse response = mock(MPResponse.class);
+        when(response.getContent()).thenReturn("Error");
+        when(exception.getApiResponse()).thenReturn(response);
+        
+        try (MockedConstruction<com.mercadopago.client.payment.PaymentRefundClient> mocked = Mockito.mockConstruction(com.mercadopago.client.payment.PaymentRefundClient.class,
+                (mock, context) -> {
+                    when(mock.refund(12345L)).thenThrow(exception);
+                })) {
+
+            boolean result = mercadoPagoGateway.refundPayment("12345");
+            assertThat(result).isFalse();
+        }
+    }
+
+    @Test
+    void refundPayment_shouldReturnFalseOnException() throws MPException, MPApiException {
+        RuntimeException exception = new RuntimeException("Error");
+        
+        try (MockedConstruction<com.mercadopago.client.payment.PaymentRefundClient> mocked = Mockito.mockConstruction(com.mercadopago.client.payment.PaymentRefundClient.class,
+                (mock, context) -> {
+                    when(mock.refund(12345L)).thenThrow(exception);
+                })) {
+
+            boolean result = mercadoPagoGateway.refundPayment("12345");
+            assertThat(result).isFalse();
+        }
+    }
+
+    @Test
+    void cancelPayment_shouldReturnTrueWhenSuccessful() throws MPException, MPApiException {
+        com.mercadopago.resources.payment.Payment cancel = mock(com.mercadopago.resources.payment.Payment.class);
+        when(cancel.getId()).thenReturn(111L);
+
+        try (MockedConstruction<PaymentClient> mocked = Mockito.mockConstruction(PaymentClient.class,
+                (mock, context) -> {
+                    when(mock.cancel(12345L)).thenReturn(cancel);
+                })) {
+
+            boolean result = mercadoPagoGateway.cancelPayment("12345");
+            assertThat(result).isTrue();
+        }
+    }
+
+    @Test
+    void cancelPayment_shouldReturnFalseOnNumberFormatException() {
+        boolean result = mercadoPagoGateway.cancelPayment("not-a-number");
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    void cancelPayment_shouldReturnFalseOnMPApiException() throws MPException, MPApiException {
+        MPApiException exception = mock(MPApiException.class);
+        MPResponse response = mock(MPResponse.class);
+        when(response.getContent()).thenReturn("Error");
+        when(exception.getApiResponse()).thenReturn(response);
+        
+        try (MockedConstruction<PaymentClient> mocked = Mockito.mockConstruction(PaymentClient.class,
+                (mock, context) -> {
+                    when(mock.cancel(12345L)).thenThrow(exception);
+                })) {
+
+            boolean result = mercadoPagoGateway.cancelPayment("12345");
+            assertThat(result).isFalse();
+        }
+    }
+
+    @Test
+    void cancelPayment_shouldReturnFalseOnException() throws MPException, MPApiException {
+        RuntimeException exception = new RuntimeException("Error");
+        
+        try (MockedConstruction<PaymentClient> mocked = Mockito.mockConstruction(PaymentClient.class,
+                (mock, context) -> {
+                    when(mock.cancel(12345L)).thenThrow(exception);
+                })) {
+
+            boolean result = mercadoPagoGateway.cancelPayment("12345");
+            assertThat(result).isFalse();
+        }
+    }
 }
