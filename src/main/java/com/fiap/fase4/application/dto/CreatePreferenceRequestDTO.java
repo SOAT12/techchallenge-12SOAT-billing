@@ -12,6 +12,7 @@ public class CreatePreferenceRequestDTO {
     private String serviceOrderId;
     private CustomerDTO customer;
     private List<ItemDTO> items;
+    private List<ServiceDTO> services;
     private BigDecimal totalAmount;
     private ResponseUrlsDTO responseUrls;
     private String notificationUrl;

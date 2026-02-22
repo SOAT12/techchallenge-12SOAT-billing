@@ -9,6 +9,7 @@ import com.fiap.fase4.domain.gateway.PaymentRepository;
 import com.fiap.fase4.application.gateway.DomainEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,39 +37,49 @@ class CancelPaymentUseCaseTest {
     private CancelPaymentUseCase useCase;
 
     @Test
-    void execute_ShouldRefundAndPublishEvent_WhenPaymentIsApproved() {
+    void execute_ShouldMarkAsCancelledForManualResolution_WhenPaymentIsApproved() {
         OrderCancelledEvent event = new OrderCancelledEvent("ORDER-123", "Out of stock", LocalDateTime.now());
-        Payment payment = Payment.builder()
+        
+        // We use thenAnswer to return a NEW instance every time findByServiceOrderId is called
+        // to avoid side-effects between the setup and the execution
+        when(paymentRepository.findByServiceOrderId("ORDER-123")).thenAnswer(inv -> Optional.of(
+            Payment.builder()
+                .id("PAY-123")
                 .serviceOrderId("ORDER-123")
                 .preferenceId("987654")
                 .status(PaymentStatus.APPROVED)
-                .build();
+                .build()
+        ));
 
-        when(paymentRepository.findByServiceOrderId("ORDER-123")).thenReturn(Optional.of(payment));
-        when(paymentGateway.refundPayment("987654")).thenReturn(true);
+        when(paymentGateway.cancelPayment("PAY-123")).thenReturn(true);
 
         useCase.execute(event);
 
-        assertEquals(PaymentStatus.REFUNDED, payment.getStatus());
-        verify(paymentRepository).save(payment);
+        ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(paymentCaptor.capture());
+        
+        assertEquals(PaymentStatus.CANCELLED, paymentCaptor.getValue().getStatus());
         verify(domainEventPublisher).publishPaymentFailedEvent(any(PaymentFailedEvent.class));
     }
 
     @Test
     void execute_ShouldCancelAndPublishEvent_WhenPaymentIsPending() {
         OrderCancelledEvent event = new OrderCancelledEvent("ORDER-123", "User cancelled", LocalDateTime.now());
-        Payment payment = Payment.builder()
+        
+        when(paymentRepository.findByServiceOrderId("ORDER-123")).thenAnswer(inv -> Optional.of(
+            Payment.builder()
                 .serviceOrderId("ORDER-123")
                 .status(PaymentStatus.PENDING)
-                .build();
-
-        when(paymentRepository.findByServiceOrderId("ORDER-123")).thenReturn(Optional.of(payment));
+                .build()
+        ));
 
         useCase.execute(event);
 
-        assertEquals(PaymentStatus.CANCELLED, payment.getStatus());
+        ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
+        verify(paymentRepository).save(paymentCaptor.capture());
+        
+        assertEquals(PaymentStatus.CANCELLED, paymentCaptor.getValue().getStatus());
         verify(paymentGateway, never()).refundPayment(any());
-        verify(paymentRepository).save(payment);
         verify(domainEventPublisher).publishPaymentFailedEvent(any(PaymentFailedEvent.class));
     }
 
