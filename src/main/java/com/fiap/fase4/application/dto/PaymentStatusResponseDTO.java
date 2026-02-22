@@ -17,6 +17,7 @@ public class PaymentStatusResponseDTO {
     private String serviceOrderId;
     private String customerId;
     private String checkoutUrl;
+    private String paymentId;
     private PaymentStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
