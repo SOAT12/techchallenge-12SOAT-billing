@@ -35,6 +35,7 @@ public class GetPaymentStatusUseCase {
                 .preferenceId(payment.getPreferenceId())
                 .serviceOrderId(payment.getServiceOrderId())
                 .customerId(customerId)
+                .paymentId(payment.getPaymentId())
                 .checkoutUrl(payment.getCheckoutUrl())
                 .status(payment.getStatus())
                 .createdAt(payment.getCreatedAt())
