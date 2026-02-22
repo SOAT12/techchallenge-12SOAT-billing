@@ -14,6 +14,10 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for OIDC
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -21,27 +25,26 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::${{ env.ACCOUNT_ID }}:role/GitHubActionsAppDeployRole
           aws-region: ${{ env.AWS_REGION }}
 
       # --- Step 1: Fetch Infrastructure Details ---
       - name: Fetch Infrastructure Details
         id: infra
         run: |
-          # Fetch SQS URL
-          SQS_URL=$(aws sqs get-queue-url --queue-name payment-notifications-queue --query 'QueueUrl' --output text)
+          # Fetch SQS URL (using head -n 1 to handle potential multiple results)
+          SQS_URL=$(aws sqs get-queue-url --queue-name payment-notifications-queue --query 'QueueUrl' --output text | head -n 1)
           echo "SQS_URL=$SQS_URL" >> $GITHUB_OUTPUT
           
-          # Fetch SNS ARNs
-          SNS_APPROVED=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'payment-approved-topic')].TopicArn" --output text)
+          # Fetch SNS ARNs (taking the first match)
+          SNS_APPROVED=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'payment-approved-topic')].TopicArn" --output text | head -n 1)
           echo "SNS_APPROVED=$SNS_APPROVED" >> $GITHUB_OUTPUT
           
-          SNS_FAILED=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'payment-failed-topic')].TopicArn" --output text)
+          SNS_FAILED=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'payment-failed-topic')].TopicArn" --output text | head -n 1)
           echo "SNS_FAILED=$SNS_FAILED" >> $GITHUB_OUTPUT
           
-          # Fetch API Gateway Webhook URL (fetching the first HTTP API found)
-          WEBHOOK_URL=$(aws apigatewayv2 get-apis --query "Items[?Name=='billing-webhook-proxy'].ApiEndpoint" --output text)/api/v1/webhooks/mercadopago
+          # Fetch API Gateway Webhook URL (taking the first endpoint)
+          WEBHOOK_URL=$(aws apigatewayv2 get-apis --query "Items[?Name=='billing-webhook-proxy'].ApiEndpoint" --output text | head -n 1)/api/v1/webhooks/mercadopago
           echo "WEBHOOK_URL=$WEBHOOK_URL" >> $GITHUB_OUTPUT
 
       # --- Step 2: Build & Push Automation ---
