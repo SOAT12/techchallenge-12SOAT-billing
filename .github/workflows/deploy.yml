@@ -44,7 +44,9 @@ jobs:
           echo "SNS_FAILED=$SNS_FAILED" >> $GITHUB_OUTPUT
           
           # Fetch API Gateway Webhook URL (taking the first endpoint)
-          WEBHOOK_URL=$(aws apigatewayv2 get-apis --query "Items[?Name=='billing-webhook-proxy'].ApiEndpoint" --output text | head -n 1)/api/v1/webhooks/mercadopago
+          # We use -detailed-exitcode or tags if we had them, but for now we'll take the first one 
+          # and ensure we only get a single string.
+          WEBHOOK_URL=$(aws apigatewayv2 get-apis --region ${{ env.AWS_REGION }} --query "Items[?Name=='billing-webhook-proxy'].ApiEndpoint" --output text | awk '{print $1}')/api/v1/webhooks/mercadopago
           echo "WEBHOOK_URL=$WEBHOOK_URL" >> $GITHUB_OUTPUT
 
           # Fetch Secrets from Secrets Manager
