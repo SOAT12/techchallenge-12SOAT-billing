@@ -2,8 +2,13 @@ name: Deploy Billing API
 
 on:
   push:
-    branches: [ master ]
-  workflow_dispatch:
+    branches: [ master, develop, 'release/*' ]
+  pull_request:
+    branches: [ master, develop, 'release/*' ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   AWS_REGION: us-east-1
