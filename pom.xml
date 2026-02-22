@@ -22,6 +22,9 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<sonar.projectKey>SOAT12_techchallenge-12SOAT-billing</sonar.projectKey>
+	 	<sonar.organization>techchallenge-12soat</sonar.organization>
+		<sonar.scm.provider>git</sonar.scm.provider>
 	</properties>
 	<dependencies>
         <dependency>
