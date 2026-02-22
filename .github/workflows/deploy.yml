@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  EKS_CLUSTER_NAME: techchallenge-billing
+  EKS_CLUSTER_NAME: techchallenge-cluster
   ECR_REPOSITORY: billing-api
   ACCOUNT_ID: 258531703731
 
@@ -25,21 +25,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # --- Step 1: Infrastructure Automation ---
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Apply
-        id: terraform
+      # --- Step 1: Fetch Infrastructure Details ---
+      - name: Fetch Infrastructure Details
+        id: infra
         run: |
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
-          # Export outputs as environment variables for subsequent steps
-          echo "WEBHOOK_URL=$(terraform output -raw api_gateway_webhook_url)" >> $GITHUB_OUTPUT
-          echo "SQS_URL=$(terraform output -raw payment_notifications_queue_url)" >> $GITHUB_OUTPUT
-          echo "SNS_APPROVED=$(terraform output -raw payment_approved_topic_arn)" >> $GITHUB_OUTPUT
-          echo "SNS_FAILED=$(terraform output -raw payment_failed_topic_arn)" >> $GITHUB_OUTPUT
+          # Fetch SQS URL
+          SQS_URL=$(aws sqs get-queue-url --queue-name payment-notifications-queue --query 'QueueUrl' --output text)
+          echo "SQS_URL=$SQS_URL" >> $GITHUB_OUTPUT
+          
+          # Fetch SNS ARNs
+          SNS_APPROVED=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'payment-approved-topic')].TopicArn" --output text)
+          echo "SNS_APPROVED=$SNS_APPROVED" >> $GITHUB_OUTPUT
+          
+          SNS_FAILED=$(aws sns list-topics --query "Topics[?contains(TopicArn, 'payment-failed-topic')].TopicArn" --output text)
+          echo "SNS_FAILED=$SNS_FAILED" >> $GITHUB_OUTPUT
+          
+          # Fetch API Gateway Webhook URL (fetching the first HTTP API found)
+          WEBHOOK_URL=$(aws apigatewayv2 get-apis --query "Items[?Name=='billing-webhook-proxy'].ApiEndpoint" --output text)/api/v1/webhooks/mercadopago
+          echo "WEBHOOK_URL=$WEBHOOK_URL" >> $GITHUB_OUTPUT
 
       # --- Step 2: Build & Push Automation ---
       - name: Set up JDK 21
@@ -72,10 +75,10 @@ jobs:
           kubectl create secret generic billing-secrets \
             --from-literal=MONGODB_URI="${{ secrets.MONGODB_URI }}" \
             --from-literal=MERCADO_PAGO_ACCESS_TOKEN="${{ secrets.MERCADO_PAGO_ACCESS_TOKEN }}" \
-            --from-literal=MERCADOPAGO_NOTIFICATION_URL="${{ steps.terraform.outputs.WEBHOOK_URL }}" \
-            --from-literal=PAYMENT_NOTIFICATION_QUEUE_URL="${{ steps.terraform.outputs.SQS_URL }}" \
-            --from-literal=PAYMENT_APPROVED_TOPIC_ARN="${{ steps.terraform.outputs.SNS_APPROVED }}" \
-            --from-literal=PAYMENT_FAILED_TOPIC_ARN="${{ steps.terraform.outputs.SNS_FAILED }}" \
+            --from-literal=MERCADOPAGO_NOTIFICATION_URL="${{ steps.infra.outputs.WEBHOOK_URL }}" \
+            --from-literal=PAYMENT_NOTIFICATION_QUEUE_URL="${{ steps.infra.outputs.SQS_URL }}" \
+            --from-literal=PAYMENT_APPROVED_TOPIC_ARN="${{ steps.infra.outputs.SNS_APPROVED }}" \
+            --from-literal=PAYMENT_FAILED_TOPIC_ARN="${{ steps.infra.outputs.SNS_FAILED }}" \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy Manifests
