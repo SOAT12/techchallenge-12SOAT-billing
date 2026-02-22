@@ -36,23 +36,20 @@ public class CancelPaymentUseCase {
 
             Payment payment = paymentOptional.get();
 
-            // If the payment is already approved, attempt a refund
+            // In an auto shop context, labor and items already applied cannot be "undone".
+            // If payment was already approved, we mark it as needing manual intervention
+            // instead of attempting an automatic refund.
             if (PaymentStatus.APPROVED.equals(payment.getStatus())) {
-                boolean refunded = paymentGateway.refundPayment(payment.getPreferenceId());
-                if (refunded) {
-                    payment.setStatus(PaymentStatus.REFUNDED);
-                    payment.setStatusDetail("refunded due to order cancellation");
-                    log.info("Payment successfully refunded at Gateway for order: {}", event.orderId());
-                } else {
-                    // Even if Gateway refund fails, we mark it as cancelled locally for consistency
-                    // but we log a warning as it might need manual intervention.
+                boolean cancelled = paymentGateway.cancelPayment(payment.getId());
+                if (cancelled) {
+                    log.warn("Order cancellation requested for an ALREADY APPROVED payment. Order ID: {}. Manual intervention required.", event.orderId());
                     payment.setStatus(PaymentStatus.CANCELLED);
-                    payment.setStatusDetail("gateway refund failed, order cancelled");
-                    log.warn("Gateway refund failed or not supported. Local payment marked as CANCELLED for order: {}", event.orderId());
+                    payment.setStatusDetail("Order cancelled after payment approval - manual resolution required for services/items");
                 }
             } else {
                 payment.setStatus(PaymentStatus.CANCELLED);
-                payment.setStatusDetail("order cancelled before payment approval");
+                payment.setStatusDetail("Order cancelled before payment approval: " + event.reason());
+                log.info("Payment marked as CANCELLED for order: {}", event.orderId());
             }
 
             payment.setUpdatedAt(LocalDateTime.now());

@@ -4,6 +4,8 @@ import com.fiap.fase4.application.dto.ProcessPaymentNotificationRequestDTO;
 import com.fiap.fase4.infrastructure.controller.dto.MercadoPagoNotificationDTO;
 import com.fiap.fase4.infrastructure.controller.mapper.WebhookPayloadMapper;
 import com.fiap.fase4.infrastructure.messaging.WebhookProcessingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +24,14 @@ import java.util.Optional;
 @RequestMapping("/api/v1/webhooks")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Webhooks", description = "Endpoints for receiving external notifications")
 public class WebhookController {
 
     private final WebhookPayloadMapper webhookPayloadMapper;
     private final WebhookProcessingService webhookProcessingService;
 
     @PostMapping("/mercadopago")
+    @Operation(summary = "Handle Mercado Pago Webhook", description = "Receives asynchronous payment notifications from Mercado Pago")
     public ResponseEntity<Void> handleMercadoPagoNotification(@RequestBody(required = false) MercadoPagoNotificationDTO payload) {
 
         Optional<ProcessPaymentNotificationRequestDTO> request = webhookPayloadMapper.toProcessPaymentRequest(payload);

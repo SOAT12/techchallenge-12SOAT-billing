@@ -47,6 +47,19 @@ public class CreatePaymentUseCase {
                         .build())
                 .collect(Collectors.toList());
 
+        //Map services
+        if (request.getServices() != null) {
+            items.addAll(request.getServices().stream()
+                    .map(service -> PaymentItem.builder()
+                            .id(service.getId())
+                            .itemName(service.getServiceName())
+                            .price(service.getPrice())
+                            .quantity(service.getQuantity())
+                            .build())
+                    .toList());
+        }
+
+
         // Map Urls
         PaymentUrls urls = PaymentUrls.builder()
                 .successUrl(request.getResponseUrls().getSuccessUrl())

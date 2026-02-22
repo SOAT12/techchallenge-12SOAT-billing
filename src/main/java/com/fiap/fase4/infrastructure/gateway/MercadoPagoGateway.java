@@ -164,4 +164,31 @@ public class MercadoPagoGateway implements PaymentGateway {
             return false;
         }
     }
+
+    @Override
+    public boolean cancelPayment(String paymentId) {
+        log.info("Canceling Mercado Pago payment for payment ID: {}", paymentId);
+        try {
+            // Check if the payment ID is valid and numeric before proceeding
+            long mpPaymentId = Long.parseLong(paymentId);
+            PaymentClient paymentClient = new PaymentClient();
+            com.mercadopago.resources.payment.Payment cancel = paymentClient.cancel(mpPaymentId);
+
+            if (cancel != null && cancel.getId() != null) {
+                log.info("Successfully cancelled payment ID: {}. Refund ID: {}", paymentId, cancel.getId());
+                return true;
+            }
+            return false;
+        } catch (NumberFormatException e) {
+            log.warn("Cannot cancel payment because ID is not numeric (likely a preference ID, not a processed payment): {}", paymentId);
+            return false;
+        } catch (MPApiException e) {
+            log.error("Mercado Pago API error while canceling: Status Code: {}, Response: {}", e.getStatusCode(), e.getApiResponse().getContent(), e);
+            // It might fail if the payment was never completed or is already refunded. We return false instead of throwing to allow SAGA to proceed.
+            return false;
+        } catch (Exception e) {
+            log.error("Unexpected error canceling payment ID: {}. Error: {}", paymentId, e.getMessage(), e);
+            return false;
+        }
+    }
 }
