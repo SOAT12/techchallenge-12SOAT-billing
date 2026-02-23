@@ -63,7 +63,7 @@ class CreatePaymentUseCaseTest {
                 .checkoutUrl("http://checkout")
                 .build();
 
-        when(paymentGateway.createPreference(any(Payment.class), anyList(), any(PaymentUrls.class)))
+        when(paymentGateway.createPreference(any(Payment.class)))
                 .thenReturn(preference);
 
         // Act
