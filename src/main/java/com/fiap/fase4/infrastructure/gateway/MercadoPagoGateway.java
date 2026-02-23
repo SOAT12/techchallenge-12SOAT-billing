@@ -97,44 +97,6 @@ public class MercadoPagoGateway implements PaymentGateway {
     }
 
     @Override
-    public PaymentPreference createPreference(Payment payment) {
-        log.info("Creating Mercado Pago preference for orderNumber: {}", payment.getServiceOrderId());
-        try {
-            PreferenceClient client = new PreferenceClient();
-
-            PreferencePayerRequest payer = PreferencePayerRequest.builder()
-                    .email(payment.getPayer().getEmail())
-                    .name(payment.getPayer().getCustomerName())
-                    .build();
-
-
-            PreferenceRequest request = PreferenceRequest.builder()
-//                    .items(mpItems)
-                    .payer(payer)
-//                    .backUrls(backUrls)
-//                    .notificationUrl(actualNotificationUrl)
-                    .externalReference(payment.getServiceOrderId())
-                    .build();
-
-            Preference preference = client.create(request);
-
-            log.info("Mercado Pago preference created. ID: {}, InitPoint: {}", preference.getId(), preference.getInitPoint());
-
-            return new PaymentPreference(preference.getId(), preference.getInitPoint());
-
-        } catch (MPApiException e) {
-            log.error("Mercado Pago API error: Status Code: {}, Response: {}", e.getStatusCode(), e.getApiResponse().getContent(), e);
-            throw new PaymentGatewayException("Mercado Pago API error: " + e.getApiResponse().getContent(), e);
-        } catch (MPException e) {
-            log.error("Mercado Pago SDK error: {}", e.getMessage(), e);
-            throw new PaymentGatewayException("Mercado Pago SDK error: " + e.getMessage(), e);
-        } catch (Exception e) {
-            log.error("Unexpected error creating Mercado Pago preference: {}", e.getMessage(), e);
-            throw new PaymentGatewayException("Unexpected error creating preference.", e);
-        }
-    }
-
-    @Override
     public Payment getPaymentDetails(String paymentId) {
         log.info("Getting Mercado Pago payment details for payment ID: {}", paymentId);
         try {
