@@ -1,9 +1,9 @@
 package com.fiap.fase4.infrastructure.controller;
 
 import com.fiap.fase4.application.dto.ProcessPaymentNotificationRequestDTO;
+import com.fiap.fase4.application.usecase.ProcessPaymentNotificationUseCase;
 import com.fiap.fase4.infrastructure.controller.dto.MercadoPagoNotificationDTO;
 import com.fiap.fase4.infrastructure.controller.mapper.WebhookPayloadMapper;
-import com.fiap.fase4.infrastructure.messaging.WebhookProcessingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import java.util.Optional;
 public class WebhookController {
 
     private final WebhookPayloadMapper webhookPayloadMapper;
-    private final WebhookProcessingService webhookProcessingService;
+    private final ProcessPaymentNotificationUseCase processPaymentNotificationUseCase;
 
     @PostMapping("/mercadopago")
     @Operation(summary = "Handle Mercado Pago Webhook", description = "Receives asynchronous payment notifications from Mercado Pago")
@@ -41,8 +41,12 @@ public class WebhookController {
             return ResponseEntity.ok().build();
         }
 
-        webhookProcessingService.processNotificationAsync(request.get());
-        webhookProcessingService.osStatusAsync(request.get());
+        try {
+            processPaymentNotificationUseCase.execute(request.get());
+        } catch (Exception e) {
+            log.error("Failed to process payment notification", e);
+        }
+        
         return ResponseEntity.ok().build();
     }
 }

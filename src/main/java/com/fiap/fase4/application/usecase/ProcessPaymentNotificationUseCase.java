@@ -27,9 +27,9 @@ public class ProcessPaymentNotificationUseCase {
 
     public ProcessPaymentNotificationResponseDTO execute(ProcessPaymentNotificationRequestDTO input) {
         log.info("Executing ProcessPaymentNotificationUseCase for resource type: {}, ID: {}",
-                input.resourceType(), input.resourceId());
+                input.type(), input.resourceId());
 
-        if (input.resourceId() == null || !"payment".equalsIgnoreCase(input.resourceType())) {
+        if (input.resourceId() == null || !"payment".equalsIgnoreCase(input.type())) {
             return new ProcessPaymentNotificationResponseDTO(false, "INVALID_NOTIFICATION");
         }
 
