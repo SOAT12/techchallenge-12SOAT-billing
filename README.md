@@ -26,6 +26,10 @@ http://localhost:8080/swagger-ui/index.html
 *   `GET /api/v1/checkout/order/{serviceOrderId}`: Consulta o status do pagamento pelo ID da Ordem de Serviço.
 *   `POST /api/v1/webhooks/mercadopago`: Recebe notificações assíncronas (webhooks) do gateway de pagamento.
 
+### Arquitetura
+
+![Evidência do SonarCloud funcionando](images/doc_billing.png)
+
 ### Evidência do SonarCloud funcionando
 
 ![Evidência do SonarCloud funcionando](images/sonar_cloud_geral.png)
