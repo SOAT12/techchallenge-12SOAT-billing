@@ -37,16 +37,16 @@ public class CreatePaymentUseCase {
                  .build());
         }
 
-//        // Map Items
-//        List<PaymentItem> items = request.getItems().stream()
-//                .map(item -> PaymentItem.builder()
-//                        .id(item.getId())
-//                        .itemName(item.getItemName())
-//                        .price(item.getPrice())
-//                        .quantity(item.getQuantity())
-//                        .build())
-//                .collect(Collectors.toList());
-//
+        // Map Items
+        List<PaymentItem> items = request.getItems().stream()
+                .map(item -> PaymentItem.builder()
+                        .id(item.getId())
+                        .itemName(item.getItemName())
+                        .price(item.getPrice())
+                        .quantity(item.getQuantity())
+                        .build())
+                .collect(Collectors.toList());
+
 //        //Map services
 //        if (request.getServices() != null) {
 //            items.addAll(request.getServices().stream()
@@ -80,7 +80,7 @@ public class CreatePaymentUseCase {
                 .build();
 
         // Call Gateway
-        PaymentPreference preference = paymentGateway.createPreference(payment);
+        PaymentPreference preference = paymentGateway.createPreference(payment, items, urls);
 
         // Update Payment with preference info
         payment.setPreferenceId(preference.getId());

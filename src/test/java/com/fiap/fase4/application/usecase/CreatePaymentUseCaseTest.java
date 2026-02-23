@@ -46,7 +46,7 @@ class CreatePaymentUseCaseTest {
         request.setCustomer(customer);
 
         ItemDTO item = new ItemDTO("ITEM-1", "Test Item", 1, new BigDecimal("100.00"));
-//        request.setItems(Collections.singletonList(item));
+        request.setItems(Collections.singletonList(item));
 
         ResponseUrlsDTO urls = new ResponseUrlsDTO();
         urls.setSuccessUrl("http://success");
@@ -63,7 +63,7 @@ class CreatePaymentUseCaseTest {
                 .checkoutUrl("http://checkout")
                 .build();
 
-        when(paymentGateway.createPreference(any(Payment.class)))
+        when(paymentGateway.createPreference(any(Payment.class), anyList(), any(PaymentUrls.class)))
                 .thenReturn(preference);
 
         // Act
@@ -74,7 +74,7 @@ class CreatePaymentUseCaseTest {
         assertEquals("PREF-123", response.getId());
         assertEquals("http://checkout", response.getCheckoutUrl());
 
-        verify(paymentGateway).createPreference(any(Payment.class));
+        verify(paymentGateway).createPreference(any(Payment.class), anyList(), any(PaymentUrls.class));
         verify(paymentRepository).save(any(Payment.class));
     }
 }
