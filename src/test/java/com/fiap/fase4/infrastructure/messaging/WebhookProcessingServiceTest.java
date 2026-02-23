@@ -31,7 +31,7 @@ class WebhookProcessingServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(webhookProcessingService, "queueUrl", "http://test-queue");
+        ReflectionTestUtils.setField(webhookProcessingService, "paymentNotificationQueueUrl", "http://test-queue");
     }
 
     @Test

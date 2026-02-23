@@ -42,6 +42,7 @@ public class WebhookController {
         }
 
         webhookProcessingService.processNotificationAsync(request.get());
+        webhookProcessingService.osStatusAsync(request.get());
         return ResponseEntity.ok().build();
     }
 }
