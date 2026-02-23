@@ -46,7 +46,7 @@ class CreatePaymentUseCaseTest {
         request.setCustomer(customer);
 
         ItemDTO item = new ItemDTO("ITEM-1", "Test Item", 1, new BigDecimal("100.00"));
-        request.setItems(Collections.singletonList(item));
+//        request.setItems(Collections.singletonList(item));
 
         ResponseUrlsDTO urls = new ResponseUrlsDTO();
         urls.setSuccessUrl("http://success");
