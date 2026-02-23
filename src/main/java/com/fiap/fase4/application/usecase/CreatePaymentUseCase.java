@@ -37,27 +37,27 @@ public class CreatePaymentUseCase {
                  .build());
         }
 
-        // Map Items
-        List<PaymentItem> items = request.getItems().stream()
-                .map(item -> PaymentItem.builder()
-                        .id(item.getId())
-                        .itemName(item.getItemName())
-                        .price(item.getPrice())
-                        .quantity(item.getQuantity())
-                        .build())
-                .collect(Collectors.toList());
-
-        //Map services
-        if (request.getServices() != null) {
-            items.addAll(request.getServices().stream()
-                    .map(service -> PaymentItem.builder()
-                            .id(service.getId())
-                            .itemName(service.getServiceName())
-                            .price(service.getPrice())
-                            .quantity(service.getQuantity())
-                            .build())
-                    .toList());
-        }
+//        // Map Items
+//        List<PaymentItem> items = request.getItems().stream()
+//                .map(item -> PaymentItem.builder()
+//                        .id(item.getId())
+//                        .itemName(item.getItemName())
+//                        .price(item.getPrice())
+//                        .quantity(item.getQuantity())
+//                        .build())
+//                .collect(Collectors.toList());
+//
+//        //Map services
+//        if (request.getServices() != null) {
+//            items.addAll(request.getServices().stream()
+//                    .map(service -> PaymentItem.builder()
+//                            .id(service.getId())
+//                            .itemName(service.getServiceName())
+//                            .price(service.getPrice())
+//                            .quantity(service.getQuantity())
+//                            .build())
+//                    .toList());
+//        }
 
 
         // Map Urls
@@ -71,7 +71,8 @@ public class CreatePaymentUseCase {
         // Create initial Payment domain entity
         Payment payment = Payment.builder()
                 .serviceOrderId(request.getServiceOrderId())
-                .amount(validateAmount(request.getTotalAmount(), items))
+                .amount(request.getTotalAmount())
+//                .amount(validateAmount(request.getTotalAmount(), items))
                 .payer(payer)
                 .status(PaymentStatus.PENDING)
                 .createdAt(LocalDateTime.now())
@@ -79,7 +80,7 @@ public class CreatePaymentUseCase {
                 .build();
 
         // Call Gateway
-        PaymentPreference preference = paymentGateway.createPreference(payment, items, urls);
+        PaymentPreference preference = paymentGateway.createPreference(payment);
 
         // Update Payment with preference info
         payment.setPreferenceId(preference.getId());

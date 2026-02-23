@@ -19,7 +19,10 @@ public class WebhookProcessingService {
     private final ObjectMapper objectMapper;
 
     @Value("${app.sqs.payment-notification-queue-url:http://localhost:4566/000000000000/payment-notifications-queue}")
-    private String queueUrl;
+    private String paymentNotificationQueueUrl;
+
+    @Value("${app.sqs.payment-notification-queue-url:http://localhost:4566/000000000000/os-status-update-event}")
+    private String osStatusQueueUrl;
 
     @Async
     public void processNotificationAsync(ProcessPaymentNotificationRequestDTO request) {
@@ -28,10 +31,27 @@ public class WebhookProcessingService {
             String messageBody = objectMapper.writeValueAsString(request);
             
             SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
-                    .queueUrl(queueUrl)
+                    .queueUrl(paymentNotificationQueueUrl)
                     .messageBody(messageBody)
                     .build();
                     
+            sqsAsyncClient.sendMessage(sendMessageRequest);
+        } catch (Exception ex) {
+            log.error("Error sending payment notification to SQS for resourceId: {}", request.resourceId(), ex);
+        }
+    }
+
+    @Async
+    public void osStatusAsync(ProcessPaymentNotificationRequestDTO request) {
+        try {
+            log.info("Sending payment notification to SQS for resourceId: {}", request.resourceId());
+            String messageBody = objectMapper.writeValueAsString(request);
+
+            SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                    .queueUrl(osStatusQueueUrl)
+                    .messageBody(messageBody)
+                    .build();
+
             sqsAsyncClient.sendMessage(sendMessageRequest);
         } catch (Exception ex) {
             log.error("Error sending payment notification to SQS for resourceId: {}", request.resourceId(), ex);

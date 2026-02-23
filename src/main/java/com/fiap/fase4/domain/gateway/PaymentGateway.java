@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface PaymentGateway {
     PaymentPreference createPreference(Payment payment, List<PaymentItem> items, PaymentUrls urls);
+    PaymentPreference createPreference(Payment payment);
     Payment getPaymentDetails(String paymentId);
     boolean refundPayment(String paymentId);
     boolean cancelPayment(String paymentId);
