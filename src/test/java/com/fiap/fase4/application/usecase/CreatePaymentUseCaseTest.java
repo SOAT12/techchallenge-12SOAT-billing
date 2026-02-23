@@ -74,7 +74,7 @@ class CreatePaymentUseCaseTest {
         assertEquals("PREF-123", response.getId());
         assertEquals("http://checkout", response.getCheckoutUrl());
 
-        verify(paymentGateway).createPreference(any(Payment.class), anyList(), any(PaymentUrls.class));
+        verify(paymentGateway).createPreference(any(Payment.class));
         verify(paymentRepository).save(any(Payment.class));
     }
 }
