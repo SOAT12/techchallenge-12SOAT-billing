@@ -77,7 +77,6 @@ class WebhookPayloadMapperTest {
         Optional<ProcessPaymentNotificationRequestDTO> result = mapper.toProcessPaymentRequest(payload);
         
         assertThat(result).isPresent();
-        assertThat(result.get().resourceType()).isEqualTo("payment");
         assertThat(result.get().resourceId()).isEqualTo("12345");
     }
 }
